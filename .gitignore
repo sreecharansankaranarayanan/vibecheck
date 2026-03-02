@@ -21,6 +21,9 @@ examples/*/dist/
 # macOS
 .DS_Store
 
+# Compiled JS emitted alongside TS source in examples (Vite handles bundling)
+examples/**/*.js
+
 # Environment
 .env
 .env.local
