@@ -1,12 +1,11 @@
 {
-  "name": "course-scheduler",
+  "name": "course-scheduler-buggy",
   "version": "1.0.0",
-  "description": "Student Course Scheduler — VibeCheck demo app from the L@S '26 paper",
+  "description": "Maintenance task (buggy version) — L@S '26 VibeCheck study. Contains injected logic bomb for debugging practice.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "grade": "node test/grade.test.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -16,7 +15,6 @@
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.2.1",
-    "puppeteer": "^22.0.0",
     "typescript": "^5.4.0",
     "vite": "^5.2.0"
   }

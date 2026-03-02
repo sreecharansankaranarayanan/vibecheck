@@ -148,37 +148,38 @@ In the **Extension Development Host** window:
 
 ---
 
-## Try the Demo App
+## Study Apps
 
-The `examples/course-scheduler/` directory contains the **exact React app used in the N=78 study** from the paper. It replicates the task given to students in the experiment: build a course enrollment scheduler with AI assistance, then maintain it without AI.
+The `examples/` directory contains all three apps used in the study:
 
-### Step 1 — Run the app
+| Directory | Purpose |
+|---|---|
+| `course-scheduler-starter/` | **Phase 1 starting point** — blank scaffold participants build from |
+| `course-scheduler/` | **Reference implementation** — complete working solution + grading harness |
+| `course-scheduler-buggy/` | **Phase 2 maintenance task** — logic bomb version for debugging practice |
+
+### Try the reference implementation
 
 ```bash
 cd examples/course-scheduler
 npm install
-npm run dev          # starts at http://localhost:5173
+npm run dev          # http://localhost:5173
 ```
 
 **Login:** `student` / `cs2026`
 
-**Features:** 20-course catalog, enrollment with conflict detection, credit counter, localStorage persistence, CSV/TXT schedule export.
+### Run the grading harness
 
-### Step 2 — Use it with VibeCheck active
+With the app running at `:5173`, in a second terminal:
 
-1. Launch the Extension Development Host (`F5`) and open `examples/course-scheduler/` inside it
-2. Use Cursor AI or GitHub Copilot to generate code for any feature (e.g. *"add a filter by credit count"*)
-3. Click **Apply** (Cursor) or **Tab** (Copilot) — the VibeCheck gate blocks the action
-4. Explain the code's causal logic to pass the gate
+```bash
+cd examples/course-scheduler
+npm run grade
+```
 
-This is the exact workflow used in the paper's **AI-assisted condition**.
+This runs all 12 Puppeteer assertions from the paper and outputs a Functional Utility Score (0–100).
 
-### Step 3 — Maintenance Task (Debugging Practice)
-
-`examples/course-scheduler-buggy/` contains the **logic bomb** from the paper:
-
-- `await` keywords stripped from async persistence calls → race condition
-- Optimistic UI rollback logic deleted → ghost courses appear on refresh
+### Phase 2 — Maintenance Task
 
 ```bash
 cd examples/course-scheduler-buggy
@@ -186,9 +187,9 @@ npm install
 npm run dev
 ```
 
-**Challenge:** Fix the bugs in `src/hooks/useEnrollment.ts` in 30 minutes, **without AI**. This is the exact maintenance task from the study — it tests whether you truly understood the code you applied through VibeCheck.
+**Bug:** Enrolled courses appear but disappear after a page refresh ("ghost courses"). Caused by missing `await` on async persistence calls and deleted rollback logic. **Fix it in 30 minutes without AI.**
 
-> **Paper finding:** Students who used the Explanation Gate had a 39% failure rate on this task vs. 77% for unrestricted AI users (p < 0.01).
+> **Paper finding:** Students who used the Explanation Gate had a 39% failure rate on this task vs. 77% for unrestricted AI users (χ²(2)=13.8, p=.001).
 
 ---
 
@@ -306,6 +307,20 @@ src/
     ├── index.html                # Modal UI
     └── main.ts                   # Webview-side JS
 ```
+
+---
+
+## Replicating the Study
+
+`study/README.md` contains the complete replication guide:
+
+- Full 3-condition setup (Groups A/B/C)
+- Participant screener and consent script
+- Session protocol with exact facilitator scripts
+- Verbatim participant instructions for all groups
+- Data collection schema (telemetry, grades, surveys)
+- Post-session survey instrument
+- Python analysis pipeline to reproduce the paper's statistics
 
 ---
 

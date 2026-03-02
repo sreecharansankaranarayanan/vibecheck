@@ -31,3 +31,9 @@ examples/**/*.js
 # Test coverage
 coverage/
 lcov.info
+
+# Grading harness output
+grade-result.json
+
+# Study collected data (raw participant data — not committed)
+study/data/
