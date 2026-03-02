@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+
+# Vite / React build output
+examples/*/dist/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# VS Code Extension packaging
+*.vsix
+
+# Logs
+*.log
+*.jsonl
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Test coverage
+coverage/
+lcov.info

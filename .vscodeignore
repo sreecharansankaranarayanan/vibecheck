@@ -1,0 +1,32 @@
+# SECURITY (LOW-4): Exclude source, tests, and config from the packaged .vsix.
+# Only dist/ (the compiled bundles) and static assets are included.
+
+# Source code
+src/**
+test/**
+examples/**
+
+# Build / config
+esbuild.js
+tsconfig.json
+vitest.config.ts
+.eslintrc*
+.eslintignore
+.editorconfig
+.github/**
+.vscode/**
+
+# Dev dependencies are never bundled by vsce, but be explicit
+node_modules/**
+
+# Misc
+*.map
+*.log
+.DS_Store
+
+# Keep these:
+!dist/**
+!src/webview/index.html
+!README.md
+!package.json
+!LICENSE

@@ -1,0 +1,222 @@
+[
+  {
+    "id": "CS101",
+    "name": "Introduction to Computer Science",
+    "instructor": "Dr. Ada Lovelace",
+    "credits": 3,
+    "timeslot": "MWF 09:00-10:00",
+    "startHour": 9,
+    "endHour": 10,
+    "days": ["M", "W", "F"],
+    "description": "Foundational concepts of computing, algorithms, and problem solving."
+  },
+  {
+    "id": "CS201",
+    "name": "Data Structures",
+    "instructor": "Prof. Alan Turing",
+    "credits": 4,
+    "timeslot": "TTh 10:00-11:30",
+    "startHour": 10,
+    "endHour": 11.5,
+    "days": ["T", "Th"],
+    "description": "Arrays, linked lists, trees, graphs, and algorithm complexity."
+  },
+  {
+    "id": "CS301",
+    "name": "Algorithms",
+    "instructor": "Prof. Alan Turing",
+    "credits": 4,
+    "timeslot": "MWF 11:00-12:00",
+    "startHour": 11,
+    "endHour": 12,
+    "days": ["M", "W", "F"],
+    "description": "Sorting, searching, dynamic programming, graph algorithms."
+  },
+  {
+    "id": "CS350",
+    "name": "Operating Systems",
+    "instructor": "Dr. Linus Torvalds",
+    "credits": 4,
+    "timeslot": "TTh 13:00-14:30",
+    "startHour": 13,
+    "endHour": 14.5,
+    "days": ["T", "Th"],
+    "description": "Processes, threads, memory management, file systems, and scheduling."
+  },
+  {
+    "id": "CS360",
+    "name": "Computer Networks",
+    "instructor": "Dr. Vint Cerf",
+    "credits": 3,
+    "timeslot": "MWF 14:00-15:00",
+    "startHour": 14,
+    "endHour": 15,
+    "days": ["M", "W", "F"],
+    "description": "TCP/IP, HTTP, DNS, routing protocols, and network security."
+  },
+  {
+    "id": "CS401",
+    "name": "Database Systems",
+    "instructor": "Dr. Edgar Codd",
+    "credits": 3,
+    "timeslot": "TTh 08:00-09:30",
+    "startHour": 8,
+    "endHour": 9.5,
+    "days": ["T", "Th"],
+    "description": "Relational model, SQL, transactions, indexing, and query optimization."
+  },
+  {
+    "id": "CS410",
+    "name": "Web Development",
+    "instructor": "Dr. Tim Berners-Lee",
+    "credits": 3,
+    "timeslot": "MWF 15:00-16:00",
+    "startHour": 15,
+    "endHour": 16,
+    "days": ["M", "W", "F"],
+    "description": "HTML, CSS, JavaScript, React, REST APIs, and deployment."
+  },
+  {
+    "id": "CS420",
+    "name": "Machine Learning",
+    "instructor": "Dr. Geoffrey Hinton",
+    "credits": 4,
+    "timeslot": "TTh 15:00-16:30",
+    "startHour": 15,
+    "endHour": 16.5,
+    "days": ["T", "Th"],
+    "description": "Supervised/unsupervised learning, neural networks, model evaluation."
+  },
+  {
+    "id": "CS430",
+    "name": "Compilers",
+    "instructor": "Dr. Grace Hopper",
+    "credits": 4,
+    "timeslot": "MWF 10:00-11:00",
+    "startHour": 10,
+    "endHour": 11,
+    "days": ["M", "W", "F"],
+    "description": "Lexing, parsing, semantic analysis, code generation, and optimization."
+  },
+  {
+    "id": "CS440",
+    "name": "Distributed Systems",
+    "instructor": "Dr. Leslie Lamport",
+    "credits": 4,
+    "timeslot": "TTh 11:30-13:00",
+    "startHour": 11.5,
+    "endHour": 13,
+    "days": ["T", "Th"],
+    "description": "Consensus, fault tolerance, CAP theorem, MapReduce, and microservices."
+  },
+  {
+    "id": "CS450",
+    "name": "Computer Graphics",
+    "instructor": "Dr. Ivan Sutherland",
+    "credits": 3,
+    "timeslot": "MWF 13:00-14:00",
+    "startHour": 13,
+    "endHour": 14,
+    "days": ["M", "W", "F"],
+    "description": "Rasterization, ray tracing, shaders, transformations, and OpenGL."
+  },
+  {
+    "id": "CS460",
+    "name": "Cybersecurity",
+    "instructor": "Dr. Bruce Schneier",
+    "credits": 3,
+    "timeslot": "TTh 16:00-17:30",
+    "startHour": 16,
+    "endHour": 17.5,
+    "days": ["T", "Th"],
+    "description": "Cryptography, network security, vulnerability analysis, and ethical hacking."
+  },
+  {
+    "id": "MATH201",
+    "name": "Discrete Mathematics",
+    "instructor": "Dr. Donald Knuth",
+    "credits": 3,
+    "timeslot": "MWF 08:00-09:00",
+    "startHour": 8,
+    "endHour": 9,
+    "days": ["M", "W", "F"],
+    "description": "Logic, sets, relations, graphs, combinatorics, and number theory."
+  },
+  {
+    "id": "MATH301",
+    "name": "Linear Algebra",
+    "instructor": "Dr. Gilbert Strang",
+    "credits": 3,
+    "timeslot": "TTh 09:30-11:00",
+    "startHour": 9.5,
+    "endHour": 11,
+    "days": ["T", "Th"],
+    "description": "Vectors, matrices, eigenvalues, linear transformations, and applications."
+  },
+  {
+    "id": "MATH310",
+    "name": "Probability & Statistics",
+    "instructor": "Dr. Andrei Kolmogorov",
+    "credits": 3,
+    "timeslot": "MWF 16:00-17:00",
+    "startHour": 16,
+    "endHour": 17,
+    "days": ["M", "W", "F"],
+    "description": "Random variables, distributions, hypothesis testing, Bayesian inference."
+  },
+  {
+    "id": "CS470",
+    "name": "Human-Computer Interaction",
+    "instructor": "Dr. Don Norman",
+    "credits": 3,
+    "timeslot": "TTh 14:30-16:00",
+    "startHour": 14.5,
+    "endHour": 16,
+    "days": ["T", "Th"],
+    "description": "User research, design principles, prototyping, and usability testing."
+  },
+  {
+    "id": "CS480",
+    "name": "Software Engineering",
+    "instructor": "Dr. Fred Brooks",
+    "credits": 3,
+    "timeslot": "MWF 12:00-13:00",
+    "startHour": 12,
+    "endHour": 13,
+    "days": ["M", "W", "F"],
+    "description": "Agile, design patterns, testing, CI/CD, and large-scale project management."
+  },
+  {
+    "id": "CS490",
+    "name": "Natural Language Processing",
+    "instructor": "Dr. Yoshua Bengio",
+    "credits": 4,
+    "timeslot": "TTh 13:00-14:30",
+    "startHour": 13,
+    "endHour": 14.5,
+    "days": ["T", "Th"],
+    "description": "Tokenization, transformers, LLMs, sentiment analysis, and text generation."
+  },
+  {
+    "id": "CS495",
+    "name": "Capstone Project",
+    "instructor": "Dr. Margaret Hamilton",
+    "credits": 3,
+    "timeslot": "F 14:00-17:00",
+    "startHour": 14,
+    "endHour": 17,
+    "days": ["F"],
+    "description": "Semester-long team project applying CS fundamentals to a real-world problem."
+  },
+  {
+    "id": "CS499",
+    "name": "Independent Study: AI Ethics",
+    "instructor": "Dr. Timnit Gebru",
+    "credits": 2,
+    "timeslot": "W 17:00-19:00",
+    "startHour": 17,
+    "endHour": 19,
+    "days": ["W"],
+    "description": "Fairness, accountability, transparency, and societal impact of AI systems."
+  }
+]

@@ -1,0 +1,136 @@
+{
+  "name": "vibecheck",
+  "displayName": "VibeCheck",
+  "description": "Explanation Gate for AI-generated code — forces you to explain code before it's applied, using the SOLO Taxonomy rubric from the paper 'Mitigating Epistemic Debt in Generative AI-Scaffolded Novice Programming'.",
+  "version": "0.1.0",
+  "publisher": "vibecheck",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Education", "Other"],
+  "keywords": ["ai", "copilot", "cursor", "education", "metacognition", "epistemic-debt"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vibecheck/vibecheck"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibecheck.enable",
+        "title": "VibeCheck: Enable Explanation Gate"
+      },
+      {
+        "command": "vibecheck.disable",
+        "title": "VibeCheck: Disable Explanation Gate"
+      },
+      {
+        "command": "vibecheck.setApiKey",
+        "title": "VibeCheck: Set Judge API Key"
+      },
+      {
+        "command": "vibecheck.showTelemetry",
+        "title": "VibeCheck: Show Session Telemetry"
+      }
+    ],
+    "configuration": {
+      "title": "VibeCheck",
+      "properties": {
+        "vibecheck.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the Explanation Gate for AI-generated code."
+        },
+        "vibecheck.courseName": {
+          "type": "string",
+          "default": "Programming",
+          "maxLength": 100,
+          "description": "Course name injected into the Judge system prompt (e.g. 'React', 'Python', 'Algorithms'). Max 100 characters."
+        },
+        "vibecheck.judgeProvider": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "ollama"],
+          "default": "openai",
+          "description": "LLM provider for the Judge evaluation."
+        },
+        "vibecheck.judgeModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Model ID for the Judge. E.g. 'gpt-4o', 'claude-haiku-4-5-20251001', 'llama3.2'."
+        },
+        "vibecheck.judgeBaseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Override base URL (required for Ollama, e.g. 'http://localhost:11434/v1')."
+        },
+        "vibecheck.judgeTemperature": {
+          "type": "number",
+          "default": 0.1,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Temperature for the Judge model. Default 0.1 matches the paper for deterministic grading."
+        },
+        "vibecheck.passThreshold": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 5,
+          "description": "SOLO Taxonomy score threshold to pass (1-5). Default 3 (Relational) matches the paper."
+        },
+        "vibecheck.interceptCursor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Intercept Cursor IDE's 'Apply' action (aichat.applyCodeBlock)."
+        },
+        "vibecheck.interceptCopilot": {
+          "type": "boolean",
+          "default": true,
+          "description": "Intercept GitHub Copilot inline suggestion acceptance."
+        },
+        "vibecheck.interceptInline": {
+          "type": "boolean",
+          "default": false,
+          "description": "Intercept all Tab-completion acceptances (high friction, disabled by default)."
+        },
+        "vibecheck.telemetryEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Log gate encounters to a local JSONL file for research/analytics. No data leaves your machine."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onCommand:vibecheck.enable",
+    "onCommand:vibecheck.disable",
+    "onCommand:vibecheck.setApiKey",
+    "onCommand:vibecheck.showTelemetry",
+    "onCommand:aichat.applyCodeBlock",
+    "onCommand:editor.action.inlineSuggest.commit",
+    "onCommand:acceptSelectedSuggestion"
+  ],
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src --ext ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "vsce package",
+    "vscode:prepublish": "node esbuild.js --production"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "dependencies": {
+    "openai": "^4.28.0"
+  }
+}
