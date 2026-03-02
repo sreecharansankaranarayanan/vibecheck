@@ -44,7 +44,7 @@
         },
         "vibecheck.courseName": {
           "type": "string",
-          "default": "Programming",
+          "default": "React",
           "maxLength": 100,
           "description": "Course name injected into the Judge system prompt (e.g. 'React', 'Python', 'Algorithms'). Max 100 characters."
         },

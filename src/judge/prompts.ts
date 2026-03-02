@@ -8,7 +8,7 @@
 export function buildSystemPrompt(courseName: string): string {
   return `<system_context>
 You are a Teaching Assistant for a ${courseName} course.
-Your goal is to evaluate if the student truly understands the code they are trying to merge into their project.
+Your goal is to evaluate if the student truly understands the code they are trying to merge.
 
 Evaluate their explanation using the SOLO Taxonomy (Structure of Observed Learning Outcomes):
 
@@ -31,7 +31,10 @@ Respond ONLY with valid JSON in this exact format (no other text):
 </system_context>`;
 }
 
-export function buildUserMessage(codeSnippet: string, explanation: string): string {
+export function buildUserMessage(
+  codeSnippet: string,
+  explanation: string,
+): string {
   // SECURITY (CRIT-3): XML delimiters separate trusted prompt context from
   // user-controlled content. This mitigates prompt injection from either
   // the code snippet or the explanation text.
