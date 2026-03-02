@@ -2,7 +2,7 @@
 
 > **Explanation Gate for AI-generated code** — forces you to explain code before it's applied.
 
-Based on the paper *"Mitigating Epistemic Debt in Generative AI-Scaffolded Novice Programming using Metacognitive Scripts"* (Sankaranarayanan, L@S '26).
+Based on the paper [*"Mitigating Epistemic Debt in Generative AI-Scaffolded Novice Programming using Metacognitive Scripts"*](https://arxiv.org/abs/2602.20206) (Sankaranarayanan, L@S '26).
 
 ---
 
@@ -150,7 +150,9 @@ In the **Extension Development Host** window:
 
 ## Try the Demo App
 
-The `examples/course-scheduler/` directory contains the exact React app used in the L@S '26 study. Open it in the Extension Development Host window to try VibeCheck on a real codebase:
+The `examples/course-scheduler/` directory contains the **exact React app used in the N=78 study** from the paper. It replicates the task given to students in the experiment: build a course enrollment scheduler with AI assistance, then maintain it without AI.
+
+### Step 1 — Run the app
 
 ```bash
 cd examples/course-scheduler
@@ -162,14 +164,31 @@ npm run dev          # starts at http://localhost:5173
 
 **Features:** 20-course catalog, enrollment with conflict detection, credit counter, localStorage persistence, CSV/TXT schedule export.
 
-### Maintenance Task (Debugging Practice)
+### Step 2 — Use it with VibeCheck active
+
+1. Launch the Extension Development Host (`F5`) and open `examples/course-scheduler/` inside it
+2. Use Cursor AI or GitHub Copilot to generate code for any feature (e.g. *"add a filter by credit count"*)
+3. Click **Apply** (Cursor) or **Tab** (Copilot) — the VibeCheck gate blocks the action
+4. Explain the code's causal logic to pass the gate
+
+This is the exact workflow used in the paper's **AI-assisted condition**.
+
+### Step 3 — Maintenance Task (Debugging Practice)
 
 `examples/course-scheduler-buggy/` contains the **logic bomb** from the paper:
 
 - `await` keywords stripped from async persistence calls → race condition
 - Optimistic UI rollback logic deleted → ghost courses appear on refresh
 
-**Challenge:** Fix the bugs in `src/hooks/useEnrollment.ts` in 30 minutes, without AI. This tests whether you truly understood the code you applied through VibeCheck.
+```bash
+cd examples/course-scheduler-buggy
+npm install
+npm run dev
+```
+
+**Challenge:** Fix the bugs in `src/hooks/useEnrollment.ts` in 30 minutes, **without AI**. This is the exact maintenance task from the study — it tests whether you truly understood the code you applied through VibeCheck.
+
+> **Paper finding:** Students who used the Explanation Gate had a 39% failure rate on this task vs. 77% for unrestricted AI users (p < 0.01).
 
 ---
 
@@ -206,7 +225,7 @@ Run `VibeCheck: Set Judge API Key` and enter any placeholder value (Ollama doesn
 | Setting | Default | Description |
 |---|---|---|
 | `vibecheck.enabled` | `true` | Enable/disable the gate globally |
-| `vibecheck.courseName` | `"Programming"` | Course name injected into the Judge prompt (e.g. `"React"`, `"Python"`) |
+| `vibecheck.courseName` | `"React"` | Course name injected into the Judge prompt (e.g. `"React"`, `"Python"`) |
 | `vibecheck.judgeProvider` | `"openai"` | `openai` \| `anthropic` \| `ollama` |
 | `vibecheck.judgeModel` | `"gpt-4o"` | Model ID for the Judge (e.g. `"gpt-4o"`, `"claude-haiku-4-5-20251001"`, `"llama3.2"`) |
 | `vibecheck.judgeBaseUrl` | `""` | Override base URL — required for Ollama (`http://localhost:11434/v1`) |
@@ -292,12 +311,21 @@ src/
 
 ## Citation
 
+This extension is the artifact accompanying the paper:
+
+> Sankaranarayanan, S. (2026). **Mitigating 'Epistemic Debt' in Generative AI-Scaffolded Novice Programming using Metacognitive Scripts.** In *Proceedings of the 13th ACM Conference on Learning at Scale (L@S '26)*.
+>
+> Preprint: [https://arxiv.org/abs/2602.20206](https://arxiv.org/abs/2602.20206)
+
+If you use VibeCheck or the course-scheduler task in your own research, please cite:
+
 ```bibtex
 @inproceedings{sankaranarayanan2026epistemic,
   title={Mitigating 'Epistemic Debt' in Generative AI-Scaffolded Novice Programming using Metacognitive Scripts},
   author={Sankaranarayanan, Sreecharan},
   booktitle={Proceedings of the 13th ACM Conference on Learning at Scale},
-  year={2026}
+  year={2026},
+  url={https://arxiv.org/abs/2602.20206}
 }
 ```
 
