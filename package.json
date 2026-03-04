@@ -8,8 +8,18 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Education", "Other"],
-  "keywords": ["ai", "copilot", "cursor", "education", "metacognition", "epistemic-debt"],
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "copilot",
+    "cursor",
+    "education",
+    "metacognition",
+    "epistemic-debt"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/vibecheck/vibecheck"
@@ -50,7 +60,11 @@
         },
         "vibecheck.judgeProvider": {
           "type": "string",
-          "enum": ["openai", "anthropic", "ollama"],
+          "enum": [
+            "openai",
+            "anthropic",
+            "ollama"
+          ],
           "default": "openai",
           "description": "LLM provider for the Judge evaluation."
         },
@@ -101,15 +115,7 @@
       }
     }
   },
-  "activationEvents": [
-    "onCommand:vibecheck.enable",
-    "onCommand:vibecheck.disable",
-    "onCommand:vibecheck.setApiKey",
-    "onCommand:vibecheck.showTelemetry",
-    "onCommand:aichat.applyCodeBlock",
-    "onCommand:editor.action.inlineSuggest.commit",
-    "onCommand:acceptSelectedSuggestion"
-  ],
+  "activationEvents": ["*"],
   "scripts": {
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
@@ -125,10 +131,10 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vscode/vsce": "^2.24.0",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.27.3",
     "eslint": "^8.57.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.4.0"
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "openai": "^4.28.0"

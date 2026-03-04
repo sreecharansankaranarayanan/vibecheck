@@ -1,9 +1,9 @@
-import * as vscode from 'vscode';
-import { GatePanel } from './GatePanel';
-import { GateContext, GateEvent } from './types';
-import { transition, makeInitialContext } from './GateStateMachine';
-import { JudgeService } from '../judge/JudgeService';
-import { TelemetryService } from '../telemetry/TelemetryService';
+import * as vscode from "vscode";
+import { GatePanel } from "./GatePanel";
+import { GateContext, GateEvent } from "./types";
+import { transition, makeInitialContext } from "./GateStateMachine";
+import { JudgeService } from "../judge/JudgeService";
+import { TelemetryService } from "../telemetry/TelemetryService";
 
 // SECURITY (MED-1): Cap the number of LLM calls per gate encounter to prevent
 // unbounded API cost amplification from a student spamming the submit button.
@@ -29,9 +29,13 @@ export class ExplanationGate {
 
   async challenge(codeSnippet: string): Promise<boolean> {
     return new Promise((resolve) => {
-      this.ctx = this.dispatch({ type: 'GATE_TRIGGERED', codeSnippet });
+      this.ctx = this.dispatch({ type: "GATE_TRIGGERED", codeSnippet });
       this.panel.open(codeSnippet, this.ctx.attemptCount);
-      this.telemetry.log({ event: 'gate_shown', attempt: 1, codeLength: codeSnippet.length });
+      this.telemetry.log({
+        event: "gate_shown",
+        attempt: 1,
+        codeLength: codeSnippet.length,
+      });
 
       this.panel.onSubmit(async (explanation) => {
         const passed = await this.handleSubmit(explanation);
@@ -53,8 +57,10 @@ export class ExplanationGate {
     return next;
   }
 
-  private async handleSubmit(explanation: string): Promise<boolean | undefined> {
-    if (this.ctx.state !== 'WAITING_FOR_EXPLANATION') {
+  private async handleSubmit(
+    explanation: string,
+  ): Promise<boolean | undefined> {
+    if (this.ctx.state !== "WAITING_FOR_EXPLANATION") {
       return undefined;
     }
 
@@ -69,17 +75,23 @@ export class ExplanationGate {
       vscode.window.showWarningMessage(
         `VibeCheck: Maximum attempts (${MAX_ATTEMPTS_PER_GATE}) reached. Code application blocked.`,
       );
-      this.dispatch({ type: 'CANCELLED' });
+      this.dispatch({ type: "CANCELLED" });
       this.panel.dispose();
-      this.telemetry.log({ event: 'gate_cancelled', totalAttempts: this.ctx.attemptCount });
+      this.telemetry.log({
+        event: "gate_cancelled",
+        totalAttempts: this.ctx.attemptCount,
+      });
       return false;
     }
 
-    this.dispatch({ type: 'EXPLANATION_SUBMITTED', explanation: trimmedExplanation });
-    this.panel.send({ type: 'judging' });
+    this.dispatch({
+      type: "EXPLANATION_SUBMITTED",
+      explanation: trimmedExplanation,
+    });
+    this.panel.send({ type: "judging" });
 
     this.telemetry.log({
-      event: 'explanation_submitted',
+      event: "explanation_submitted",
       attempt: this.ctx.attemptCount,
       explanationLength: trimmedExplanation.length,
     });
@@ -95,16 +107,19 @@ export class ExplanationGate {
       const safeFeedback = result.feedback.slice(0, MAX_FEEDBACK_LENGTH);
 
       this.telemetry.log({
-        event: 'judge_response',
+        event: "judge_response",
         score: result.score,
         passed: result.passed,
         attempt: this.ctx.attemptCount,
       });
 
       if (result.passed) {
-        this.dispatch({ type: 'JUDGE_PASS' });
-        this.panel.send({ type: 'pass' });
-        this.telemetry.log({ event: 'gate_passed', totalAttempts: this.ctx.attemptCount });
+        this.dispatch({ type: "JUDGE_PASS" });
+        this.panel.send({ type: "pass" });
+        this.telemetry.log({
+          event: "gate_passed",
+          totalAttempts: this.ctx.attemptCount,
+        });
 
         setTimeout(() => {
           this.panel.dispose();
@@ -113,9 +128,17 @@ export class ExplanationGate {
 
         return true;
       } else {
-        this.dispatch({ type: 'JUDGE_FAIL' });
-        this.panel.send({ type: 'fail', feedback: safeFeedback, score: result.score });
-        this.dispatch({ type: 'GATE_TRIGGERED', codeSnippet: this.ctx.codeSnippet });
+        this.dispatch({ type: "JUDGE_FAIL" });
+        this.dispatch({
+          type: "GATE_TRIGGERED",
+          codeSnippet: this.ctx.codeSnippet,
+        });
+        this.panel.send({
+          type: "fail",
+          feedback: safeFeedback,
+          score: result.score,
+          attempt: this.ctx.attemptCount,
+        });
         return undefined;
       }
     } catch (err) {
@@ -123,23 +146,35 @@ export class ExplanationGate {
       // to the user — they may contain network details, URL fragments, or quota
       // information. Log to extension output channel; show a sanitized message.
       const sanitizedMsg = sanitizeErrorMessage(err);
-      vscode.window.showErrorMessage(`VibeCheck: Judge evaluation failed. ${sanitizedMsg}`);
-      this.dispatch({ type: 'JUDGE_FAIL' });
+      vscode.window.showErrorMessage(
+        `VibeCheck: Judge evaluation failed. ${sanitizedMsg}`,
+      );
+      this.dispatch({ type: "JUDGE_FAIL" });
+      this.dispatch({
+        type: "GATE_TRIGGERED",
+        codeSnippet: this.ctx.codeSnippet,
+      });
       this.panel.send({
-        type: 'fail',
+        type: "fail",
         feedback: `Evaluation failed. ${sanitizedMsg}`,
         score: 1,
+        attempt: this.ctx.attemptCount,
       });
-      this.dispatch({ type: 'GATE_TRIGGERED', codeSnippet: this.ctx.codeSnippet });
       return undefined;
     }
   }
 
   private handleCancel(): void {
-    if (this.ctx.state === 'WAITING_FOR_EXPLANATION' || this.ctx.state === 'FAIL') {
-      this.dispatch({ type: 'CANCELLED' });
+    if (
+      this.ctx.state === "WAITING_FOR_EXPLANATION" ||
+      this.ctx.state === "FAIL"
+    ) {
+      this.dispatch({ type: "CANCELLED" });
       this.panel.dispose();
-      this.telemetry.log({ event: 'gate_cancelled', totalAttempts: this.ctx.attemptCount });
+      this.telemetry.log({
+        event: "gate_cancelled",
+        totalAttempts: this.ctx.attemptCount,
+      });
     }
   }
 
@@ -152,21 +187,35 @@ export class ExplanationGate {
 // Strips network details, URLs, and stack traces that could expose internals.
 function sanitizeErrorMessage(err: unknown): string {
   if (!(err instanceof Error)) {
-    return 'An unexpected error occurred. Check your API key and network connection.';
+    return "An unexpected error occurred. Check your API key and network connection.";
   }
   const msg = err.message.toLowerCase();
-  if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('api key') || msg.includes('authentication')) {
+  if (
+    msg.includes("401") ||
+    msg.includes("unauthorized") ||
+    msg.includes("api key") ||
+    msg.includes("authentication")
+  ) {
     return 'Invalid API key. Run "VibeCheck: Set Judge API Key" to update it.';
   }
-  if (msg.includes('429') || msg.includes('rate limit') || msg.includes('quota')) {
-    return 'Rate limit reached on the Judge API. Please wait a moment and try again.';
+  if (
+    msg.includes("429") ||
+    msg.includes("rate limit") ||
+    msg.includes("quota")
+  ) {
+    return "Rate limit reached on the Judge API. Please wait a moment and try again.";
   }
-  if (msg.includes('timeout') || msg.includes('network') || msg.includes('econnrefused') || msg.includes('enotfound')) {
-    return 'Network error contacting the Judge. Check your internet connection and base URL setting.';
+  if (
+    msg.includes("timeout") ||
+    msg.includes("network") ||
+    msg.includes("econnrefused") ||
+    msg.includes("enotfound")
+  ) {
+    return "Network error contacting the Judge. Check your internet connection and base URL setting.";
   }
-  if (msg.includes('json') || msg.includes('parse') || msg.includes('syntax')) {
-    return 'Judge returned an unexpected response format. Try again.';
+  if (msg.includes("json") || msg.includes("parse") || msg.includes("syntax")) {
+    return "Judge returned an unexpected response format. Try again.";
   }
   // Generic safe fallback — no raw message exposed
-  return 'Check your settings (Cmd+, → VibeCheck) and try again.';
+  return "Check your settings (Cmd+, → VibeCheck) and try again.";
 }

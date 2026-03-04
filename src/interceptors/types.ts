@@ -1,4 +1,4 @@
-export type InterceptorSource = 'cursor' | 'copilot' | 'inline';
+export type InterceptorSource = "cursor" | "copilot" | "inline" | "document";
 
 export interface InterceptedEvent {
   readonly codeSnippet: string;
@@ -8,8 +8,6 @@ export interface InterceptedEvent {
 }
 
 export interface Interceptor {
-  readonly commandId: string;
-  readonly source: InterceptorSource;
   activate(onIntercept: (event: InterceptedEvent) => Promise<boolean>): void;
   deactivate(): void;
 }

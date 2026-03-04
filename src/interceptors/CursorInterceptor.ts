@@ -15,8 +15,12 @@ import { INTERCEPTED_COMMANDS } from "../constants";
  * acceptable for the educational use case.
  */
 export class CursorInterceptor implements Interceptor {
-  readonly commandId = INTERCEPTED_COMMANDS.CURSOR_APPLY;
+  readonly commandId: string;
   readonly source = "cursor" as const;
+
+  constructor(commandId: string = INTERCEPTED_COMMANDS.CURSOR_APPLY) {
+    this.commandId = commandId;
+  }
 
   private disposable: vscode.Disposable | undefined;
   private _onIntercept:

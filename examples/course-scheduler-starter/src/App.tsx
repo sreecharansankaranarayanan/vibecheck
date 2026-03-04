@@ -23,31 +23,42 @@
 // each code block before it is applied.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
-import { AppView } from './types';
-import { Login } from './components/Login';
+import { useState } from "react";
+import { AppView } from "./types";
+import { Login } from "./components/Login";
+import { CourseCatalog } from "./components/CourseCatalog";
 
 export function App() {
-  const [view, setView] = useState<AppView>('login');
-  const [username, setUsername] = useState('');
+  const [view, setView] = useState<AppView>("login");
+  const [username, setUsername] = useState("");
 
   function handleLogin(user: string) {
     setUsername(user);
-    setView('scheduler');
+    setView("scheduler");
   }
 
-  if (view === 'login') {
+  if (view === "login") {
     return <Login onLogin={handleLogin} />;
   }
 
   // TODO: Replace this placeholder with your Dashboard implementation.
   // Import your components and hooks here as you build them.
   return (
-    <div data-testid="scheduler-view" style={{ minHeight: '100vh', background: '#0f1117', color: '#e2e8f0', fontFamily: 'sans-serif', padding: 40 }}>
+    <div
+      data-testid="scheduler-view"
+      style={{
+        minHeight: "100vh",
+        background: "#0f1117",
+        color: "#e2e8f0",
+        fontFamily: "sans-serif",
+        padding: 40,
+      }}
+    >
       <h1>📚 Course Scheduler — {username}</h1>
-      <p style={{ color: '#8892b0', marginTop: 12 }}>
+      <p style={{ color: "#8892b0", marginTop: 12 }}>
         Build your scheduler here. See TASK.md for the full feature list.
       </p>
+      <CourseCatalog />
     </div>
   );
 }
