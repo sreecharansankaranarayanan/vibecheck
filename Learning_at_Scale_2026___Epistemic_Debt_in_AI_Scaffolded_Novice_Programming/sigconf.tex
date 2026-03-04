@@ -166,7 +166,7 @@ We developed a custom experimental environment to mimic a real-world Vibe Coding
     \item \textbf{Generator Model:} We utilized Claude 3.5 Sonnet (via API) for all code generation, chosen for its dominance in coding benchmarks as of the time this study was conducted in Fall 2025 \cite{anthropic2024claude35sonnet}.
     \item \textbf{Plugin Architecture:} We developed a custom VS Code extension, \textit{VibeCheck} \footnote{\url{https://github.com/sreecharansankaranarayanan/vibecheck}}, which acted as a middleman between Cursor's AI agent and the file system. As illustrated in Figure \ref{fig:arch}, the extension implemented three core logic layers:
     \begin{enumerate}
-        \item \textbf{Rule Enforcement Engine:} A document-change listener (\texttt{onDidChangeTextDocument}) that detected large AI-generated writes (threshold: $\geq$2 lines or $\geq$50 characters) using a per-document snapshot of the last human-authored state. Rather than fighting Cursor's agent in-memory—where the AI actively re-applies undone changes—the engine used VS Code's \texttt{onWillSaveTextDocument} hook to intercept file persistence. By injecting TextEdit operations that restored the pre-AI snapshot before each disk write, the engine ensured that no AI-generated code persisted until the gate was satisfied, regardless of how many times the agent re-applied changes in memory. For Group A (Manual), clipboard paste events exceeding 20 characters from external sources triggered a warning flag.
+        \item \textbf{Rule Enforcement Engine:} A document-change listener (\texttt{onDidChangeTextDocument}) that detected large AI-generated writes (threshold: $\geq$2 lines or $\geq$50 characters) using a per-document snapshot of the last human-authored state. Rather than fighting Cursor's agent in-memory—where the AI actively re-applies undone changes—the engine used VS Code's \texttt{onWillSaveTextDocument} hook to intercept file persistence (see Figure~\ref{fig:notifications}, left). By injecting TextEdit operations that restored the pre-AI snapshot before each disk write, the engine ensured that no AI-generated code persisted until the gate was satisfied. A secondary \texttt{onDidSaveTextDocument} fallback handled cases where Cursor's native ``Keep Changes'' diff UI wrote files outside VS Code's standard save pipeline, immediately overwriting any unauthorized disk write with the checkpoint content. For Group A (Manual), clipboard paste events exceeding 20 characters from external sources triggered a warning flag.
         \item \textbf{Explanation Gate Manager (The Friction Loop):} A per-document state machine (\texttt{idle} $\to$ \texttt{gating} $\to$ \texttt{blocked/approved}) responsible for the intervention. Upon detecting a halted write, this manager rendered a blocking WebView panel (Figure \ref{fig:gate_ui}) displaying the intercepted code snippet. It orchestrated an asynchronous loop with the \textbf{Judge API}, preventing file persistence until the Judge returned a ``Pass'' evaluation. If the gate was cancelled, a ``Try Again'' notification restored the gating state with the original snippet, re-opening the panel without requiring the student to re-trigger a Cursor AI action.
         \item \textbf{Telemetry Logger:} Recorded every gate encounter, explanation attempt, Judge score, and state transition with millisecond-precision timestamps for post-hoc analysis.
     \end{enumerate}
@@ -207,6 +207,19 @@ The student saw the modal prompt: \textit{``Wait! Before applying this code, exp
   \includegraphics[width=0.92\linewidth]{vibecheck_gate_ui.png}
   \caption{The VibeCheck Explanation Gate panel. The intercepted code snippet is shown in a read-only preview; the student must submit a SOLO Level 3+ explanation before the code is saved to disk. Attempt number, real-time Judge feedback, and score are displayed inline.}
   \label{fig:gate_ui}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \Description{Two VS Code notification toasts produced by VibeCheck. Left: an amber warning reading ``VibeCheck: Edit reverted — explain code to apply'' shown whenever a Cmd+S or auto-save is attempted while the gate is unresolved. Right: a blocking amber warning reading ``VibeCheck: Changes blocked — explain the code to apply it'' with a ``Try Again'' action button, shown when the student dismisses the Explanation Gate without passing.}
+  \begin{minipage}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{edit_reverted.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{dismiss_gate.png}
+  \end{minipage}
+  \caption{VS Code notification feedback loop. \textbf{Left}: an ``Edit reverted'' toast appears on every blocked save attempt, reminding the student that the gate is pending. \textbf{Right}: a ``Changes blocked'' toast with a ``Try Again'' action is shown when the gate is dismissed, allowing the student to re-open the panel with the same code snippet without re-triggering Cursor's AI.}
+  \label{fig:notifications}
 \end{figure}
 
 The use of the SOLO taxonomy for evaluating student explanations was derived with the help of an expert learning designer as the human-in-the-loop using the process described in \citet{choma2025}.
