@@ -338,12 +338,13 @@ export class AIChangeInterceptor {
 
         if (state !== "idle") return;
 
-        // BV-5 fix: Add rangeLength check for small targeted edits.
+        // Detect large AI insertions by the size of the *inserted* text only.
+        // rangeLength (deleted chars) is intentionally excluded — a human
+        // selecting and deleting 50+ chars would otherwise trigger a false gate.
         const largeChange = event.contentChanges.find(
           (c) =>
             c.text.split("\n").length >= MIN_LINES ||
-            c.text.length >= MIN_CHARS ||
-            c.rangeLength > MIN_CHARS,
+            c.text.length >= MIN_CHARS,
         );
 
         if (!largeChange) {

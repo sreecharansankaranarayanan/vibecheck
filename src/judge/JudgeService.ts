@@ -83,11 +83,13 @@ export class JudgeService {
         }
         lastError = err instanceof Error ? err : new Error(String(err));
         if (attempt === 0) {
-          // Only retry on parse failures, not network errors
+          // Only retry on parse/empty-response failures, not network errors.
+          // "empty" catches transient null-content responses from the provider.
           if (
             !lastError.message.includes("JSON") &&
             !lastError.message.includes("fields") &&
-            !lastError.message.includes("range")
+            !lastError.message.includes("range") &&
+            !lastError.message.includes("empty")
           ) {
             throw lastError;
           }
