@@ -21,9 +21,22 @@ export class GatePanel {
   private onSubmitHandler: ((explanation: string) => void) | undefined;
   private onCancelHandler: (() => void) | undefined;
 
+  // BV-1 fix: Track disposal to prevent double-invocation of onCancelHandler.
+  // The sequence that caused the bug:
+  //   ExplanationGate.handleCancel() → this.panel.dispose()
+  //     → GatePanel.dispose() → panel.dispose()
+  //       → onDidDispose fires → onCancelHandler?.() [second call]
+  //         → handleCancel dispatches CANCELLED on IDLE state → throws
+  // With _disposed, onCancelHandler fires exactly once regardless of which
+  // code path triggers the teardown.
+  private _disposed = false;
+
   constructor(private readonly extensionUri: vscode.Uri) {}
 
   open(code: string, attempt: number): void {
+    // Reset disposed flag when re-opening (fresh challenge after a prior cancel).
+    this._disposed = false;
+
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
         WEBVIEW_ID,
@@ -50,7 +63,13 @@ export class GatePanel {
 
       this.panel.onDidDispose(() => {
         this.panel = undefined;
-        this.onCancelHandler?.();
+        // BV-1 fix: Guard ensures onCancelHandler fires at most once.
+        // dispose() and onDidDispose can both fire in the same teardown chain
+        // (ExplanationGate.handleCancel calls dispose(), which triggers onDidDispose).
+        if (!this._disposed) {
+          this._disposed = true;
+          this.onCancelHandler?.();
+        }
       });
     }
 
@@ -62,6 +81,12 @@ export class GatePanel {
   }
 
   dispose(): void {
+    // BV-1 fix: Mark disposed before calling panel.dispose() so that when
+    // onDidDispose fires synchronously inside panel.dispose(), the guard above
+    // prevents a second invocation of onCancelHandler.
+    if (!this._disposed) {
+      this._disposed = true;
+    }
     this.panel?.dispose();
     this.panel = undefined;
   }

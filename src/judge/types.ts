@@ -11,7 +11,13 @@ export interface JudgeResponse {
 }
 
 export interface LLMProvider {
-  complete(systemPrompt: string, userMessage: string): Promise<string>;
+  // BV-10 fix: Optional AbortSignal so ExplanationGate can cancel an
+  // in-flight judge call when the panel is closed during JUDGING state.
+  complete(
+    systemPrompt: string,
+    userMessage: string,
+    signal?: AbortSignal,
+  ): Promise<string>;
 }
 
 export interface LLMProviderConfig {

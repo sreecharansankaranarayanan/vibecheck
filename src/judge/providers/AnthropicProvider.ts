@@ -1,5 +1,5 @@
-import OpenAI from 'openai';
-import { LLMProvider, LLMProviderConfig } from '../types';
+import OpenAI from "openai";
+import { LLMProvider, LLMProviderConfig } from "../types";
 
 /**
  * Anthropic provider using their OpenAI-compatible endpoint.
@@ -19,29 +19,36 @@ export class AnthropicProvider implements LLMProvider {
     this.config = config;
     this.client = new OpenAI({
       apiKey: config.apiKey,
-      baseURL: config.baseUrl || 'https://api.anthropic.com/v1',
+      baseURL: config.baseUrl || "https://api.anthropic.com/v1",
       defaultHeaders: {
         // Anthropic requires both the standard Bearer token AND these headers
         // when using the OpenAI-compatible endpoint.
-        'x-api-key': config.apiKey,
-        'anthropic-version': '2023-06-01',
+        "x-api-key": config.apiKey,
+        "anthropic-version": "2023-06-01",
       },
     });
   }
 
-  async complete(systemPrompt: string, userMessage: string): Promise<string> {
-    const response = await this.client.chat.completions.create({
-      model: this.config.model,
-      temperature: this.config.temperature,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    });
+  async complete(
+    systemPrompt: string,
+    userMessage: string,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    const response = await this.client.chat.completions.create(
+      {
+        model: this.config.model,
+        temperature: this.config.temperature,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+      },
+      { signal },
+    );
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('Anthropic Judge returned empty response');
+      throw new Error("Anthropic Judge returned empty response");
     }
     return content;
   }

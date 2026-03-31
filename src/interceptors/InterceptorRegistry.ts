@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { InterceptedEvent } from "./types";
 import { CursorInterceptor } from "./CursorInterceptor";
 import { CopilotInterceptor } from "./CopilotInterceptor";
@@ -11,13 +12,19 @@ export class InterceptorRegistry {
     deactivate(): void;
   }> = [];
 
+  // BV-3 fix: expose the primary AIChangeInterceptor for safe teardown.
+  private primaryInterceptor: AIChangeInterceptor | undefined;
+
   constructor(private readonly config: VibeCheckConfig) {}
 
-  activate(onIntercept: (event: InterceptedEvent) => Promise<boolean>): void {
+  activate(
+    onIntercept: (event: InterceptedEvent) => Promise<boolean>,
+    workspaceState?: vscode.Memento,
+  ): void {
     // Primary: document-change interceptor works regardless of how Cursor applies code.
-    // This catches the new Cursor agent mode that bypasses VS Code commands entirely.
     const doc = new AIChangeInterceptor();
-    doc.activate(onIntercept);
+    doc.activate(onIntercept, workspaceState);
+    this.primaryInterceptor = doc;
     this.interceptors.push(doc);
 
     // Fallback: command interception for older Cursor versions and Copilot.
@@ -47,10 +54,18 @@ export class InterceptorRegistry {
     }
   }
 
+  // BV-4 fix: Returns checkpoints of all non-idle files so the caller can
+  // restore them before tearing down, preventing files from being left with
+  // AI content on disk when a config change interrupts an active gate.
+  getActiveCheckpoints(): Map<string, string> {
+    return this.primaryInterceptor?.getActiveCheckpoints() ?? new Map();
+  }
+
   deactivate(): void {
     for (const interceptor of this.interceptors) {
       interceptor.deactivate();
     }
     this.interceptors.length = 0;
+    this.primaryInterceptor = undefined;
   }
 }
