@@ -296,7 +296,7 @@ The default threshold is **3 (Relational)**. You must explain the *why*, not jus
 npm install          # Install dependencies
 npm run compile      # One-time build (extension + webview)
 npm run watch        # Rebuild on save
-npm test             # Run unit tests (43 tests)
+npm test             # Run unit tests (56 tests)
 npm run package      # Package as .vsix for distribution
 ```
 
@@ -323,10 +323,12 @@ src/
 |   +-- GatePanel.ts              # WebviewPanel with nonce-based CSP
 |   +-- ExplanationGate.ts        # Orchestrates gate flow end-to-end
 +-- interceptors/
+|   +-- AIChangeInterceptor.ts    # Core: detects large AI edits via onDidChangeTextDocument
 |   +-- CursorInterceptor.ts      # Hooks aichat.applyCodeBlock (Cursor Apply)
 |   +-- CopilotInterceptor.ts     # Hooks editor.action.inlineSuggest.commit
 |   +-- InlineSuggestionInterceptor.ts
 |   +-- InterceptorRegistry.ts
+|   +-- types.ts                  # Shared InterceptedEvent type
 +-- telemetry/
 |   +-- TelemetryService.ts       # Optional local JSONL logging
 +-- webview/
