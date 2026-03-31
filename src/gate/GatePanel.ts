@@ -9,7 +9,8 @@ export type ExtToWebview =
   | { type: "show"; code: string; attempt: number }
   | { type: "judging" }
   | { type: "fail"; feedback: string; score: number; attempt: number }
-  | { type: "pass" };
+  // score: actual SOLO score achieved (1–5); webview must not hardcode 5.
+  | { type: "pass"; score: number };
 
 // Messages from webview → extension
 export type WebviewToExt =
@@ -132,19 +133,19 @@ export class GatePanel {
   }
 
   // SECURITY (MED-6): Fallback HTML includes a proper CSP and nonce.
+  // No inline styles — 'unsafe-inline' removed; style-src omitted since there
+  // are no <style> blocks or style attributes in this minimal error page.
   private fallbackHtml(nonce: string, scriptUri: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline';" />
+    content="default-src 'none'; script-src 'nonce-${nonce}';" />
   <title>VibeCheck</title>
 </head>
 <body>
-  <p style="font-family:sans-serif;padding:20px;color:#ccc;">
-    VibeCheck webview could not load. Please run <code>npm run compile</code> and reload VS Code.
-  </p>
+  <p>VibeCheck webview could not load. Please run <code>npm run compile</code> and reload VS Code.</p>
   <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

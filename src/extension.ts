@@ -99,7 +99,19 @@ async function setupGate(
   context: vscode.ExtensionContext,
   configService: ConfigService,
 ): Promise<void> {
-  const config = configService.get();
+  // HIGH fix: validateBaseUrl (called inside configService.get()) throws on an
+  // invalid judgeBaseUrl. Catch it here and surface a VS Code notification so
+  // the user knows what to fix, rather than silently swallowing the error as an
+  // unhandled Promise rejection that leaves the extension in a broken state.
+  let config;
+  try {
+    config = configService.get();
+  } catch (err) {
+    vscode.window.showErrorMessage(
+      `VibeCheck: Configuration error — ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return;
+  }
 
   if (!config.enabled) {
     vscode.window.setStatusBarMessage("$(circle-slash) VibeCheck OFF", 3000);

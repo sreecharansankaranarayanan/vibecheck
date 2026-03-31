@@ -12,7 +12,7 @@ type ExtToWebview =
   | { type: "show"; code: string; attempt: number }
   | { type: "judging" }
   | { type: "fail"; feedback: string; score: number; attempt: number }
-  | { type: "pass" };
+  | { type: "pass"; score: number };
 
 const vscode = acquireVsCodeApi();
 
@@ -115,7 +115,12 @@ window.addEventListener("message", (event: MessageEvent) => {
 
     case "pass": {
       setJudging(false);
-      showFeedback("pass", 5, "Great explanation! Code is being applied...");
+      // Use the actual SOLO score from the judge, not a hardcoded 5.
+      showFeedback(
+        "pass",
+        message.score,
+        "Great explanation! Code is being applied...",
+      );
       submitBtn.disabled = true;
       cancelBtn.disabled = true;
       break;

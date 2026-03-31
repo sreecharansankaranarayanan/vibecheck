@@ -28,12 +28,16 @@ export class AIChangeInterceptor {
   // BUG OBSERVED (v2): When restoreToCheckpoint called workspace.applyEdit, the
   // resulting onDidChangeTextDocument event re-triggered the gate detector, causing
   // an immediate second gate to open on the checkpoint content itself.
-  // FIX: isReapplying flag suppresses our own programmatic edits in Listener 1.
-  private isReapplying = false;
+  // FIX: per-URI reapplying Set suppresses our own programmatic edits in Listener 1.
+  // A Set (vs. the prior boolean) prevents a restore on uri-A from incorrectly
+  // suppressing gate detection for uri-B when both are restored concurrently —
+  // e.g. Listener 3 (onDidSaveTextDocument) fires for uri-B while flushBlockedQueue
+  // is mid-applyEdit for uri-A.
+  private readonly reapplying = new Set<string>();
 
-  // BV-9 fix: isReapplying must also be false in deactivate() so that any
-  // outstanding applyEdit promises from a dead instance don't confuse a new one.
-  // _deactivated is checked after every await applyEdit returns.
+  // BV-9 fix: _deactivated is checked after every await applyEdit returns so that
+  // reapplying.delete() is skipped on a dead instance (the new instance starts
+  // with its own empty set).
   private _deactivated = false;
 
   // BV-2/BV-5 fix: Guard set preventing recursive onDidChange events when
@@ -126,13 +130,14 @@ export class AIChangeInterceptor {
   }
 
   private async restoreToCheckpoint(uri: vscode.Uri): Promise<void> {
-    const checkpoint = this.checkpoints.get(uri.toString());
+    const uriKey = uri.toString();
+    const checkpoint = this.checkpoints.get(uriKey);
     if (checkpoint === undefined) return;
 
-    this.isReapplying = true;
+    this.reapplying.add(uriKey);
     try {
       const doc = vscode.workspace.textDocuments.find(
-        (d) => d.uri.toString() === uri.toString(),
+        (d) => d.uri.toString() === uriKey,
       );
       if (!doc || doc.getText() === checkpoint) return;
 
@@ -144,21 +149,21 @@ export class AIChangeInterceptor {
       edit.replace(uri, fullRange, checkpoint);
       await vscode.workspace.applyEdit(edit);
     } finally {
-      // BV-9 fix: Only reset isReapplying if this instance is still active.
+      // BV-9 fix: Only remove from reapplying if this instance is still active.
       // If deactivate() ran while applyEdit was awaited, the instance is dead
-      // and we must NOT leave isReapplying=true on the now-dead instance (a new
-      // active instance has already started with its own isReapplying=false).
+      // and the new instance has already started with its own empty Set.
       if (!this._deactivated) {
-        this.isReapplying = false;
+        this.reapplying.delete(uriKey);
       }
     }
   }
 
   private async reapplySavedChanges(uri: vscode.Uri): Promise<void> {
-    const changes = this.savedChanges.get(uri.toString());
+    const uriKey = uri.toString();
+    const changes = this.savedChanges.get(uriKey);
     if (!changes || changes.length === 0) return;
 
-    this.isReapplying = true;
+    this.reapplying.add(uriKey);
     try {
       const edit = new vscode.WorkspaceEdit();
       for (const c of changes) {
@@ -167,7 +172,7 @@ export class AIChangeInterceptor {
       await vscode.workspace.applyEdit(edit);
     } finally {
       if (!this._deactivated) {
-        this.isReapplying = false;
+        this.reapplying.delete(uriKey);
       }
     }
   }
@@ -190,87 +195,95 @@ export class AIChangeInterceptor {
       originalCommand: "onDidChangeTextDocument",
     };
 
-    let approved = false;
+    // CRITICAL race fix: keep globalGateOpen=true for the entire duration of this
+    // gate AND the subsequent flushBlockedQueue call. Previously the flag was
+    // reset in a finally block before flushBlockedQueue ran, creating a window
+    // where a concurrent onDidChangeTextDocument could start a second gate.
     try {
-      approved = await this.interceptCallback!(interceptEvent);
+      const approved = await this.interceptCallback!(interceptEvent);
+
+      if (approved) {
+        // BV-6 fix: Advance state to "idle" and update the safe-content baseline
+        // BEFORE calling reapplySavedChanges. The resulting onDidChangeTextDocument
+        // fires asynchronously after applyEdit resolves. If state were still
+        // "gating"/"blocked" when that event fires (old ordering), reapplying
+        // might already be cleared and the AI-scale change would re-trigger the gate.
+        // By setting idle+baseline first, the event sees idle state with a matching
+        // content snapshot → delta is zero → no gate triggered.
+        this.setState(uriKey, "idle"); // clears maps, persists removal
+        const doc = vscode.workspace.textDocuments.find(
+          (d) => d.uri.toString() === uriKey,
+        );
+        // Seed the baseline with the post-approval content (will be the AI code
+        // after reapplySavedChanges completes, or checkpoint if non-retry).
+        // We refresh it again after reapply to get the exact final text.
+        if (doc) {
+          this.lastSafeContent.set(uriKey, doc.getText());
+        }
+
+        if (isRetry) {
+          // On retry the in-memory doc is at checkpoint — put Cursor's changes back.
+          await this.reapplySavedChanges(changedUri);
+          // Refresh baseline with the actual final content after re-apply.
+          const postDoc = vscode.workspace.textDocuments.find(
+            (d) => d.uri.toString() === uriKey,
+          );
+          if (postDoc) {
+            this.lastSafeContent.set(uriKey, postDoc.getText());
+          }
+        }
+      } else {
+        // Gate failed or cancelled — revert in-memory to checkpoint.
+        await this.restoreToCheckpoint(changedUri);
+        this.setState(uriKey, "blocked");
+        this.persistBlocked(); // BV-3: Persist blocked state after revert
+
+        vscode.window
+          .showWarningMessage(
+            "VibeCheck: Changes blocked — explain code to apply it.",
+            "Try Again",
+          )
+          .then((choice) => {
+            if (choice === "Try Again") {
+              // BV-2/BV-5 fix: Guard against concurrent runGate on the same URI.
+              // flushBlockedQueue also processes this file; one must win.
+              if (this.retryPending.has(uriKey)) return;
+              if (this.getState(uriKey) !== "blocked") return;
+
+              const savedSnippet = this.savedSnippets.get(uriKey) ?? snippet;
+              const checkpoint = this.checkpoints.get(uriKey);
+              const changes = this.savedChanges.get(uriKey);
+              const snip = this.savedSnippets.get(uriKey);
+              this.setState(uriKey, "idle"); // clears maps
+              if (checkpoint !== undefined) {
+                this.checkpoints.set(uriKey, checkpoint);
+                // Keep lastSafeContent in sync with the checkpoint so the next
+                // AI-change delta is computed against the correct baseline.
+                this.lastSafeContent.set(uriKey, checkpoint);
+              }
+              if (changes !== undefined) this.savedChanges.set(uriKey, changes);
+              if (snip !== undefined) this.savedSnippets.set(uriKey, snip);
+
+              this.retryPending.add(uriKey);
+              this.runGate(uriKey, changedUri, savedSnippet, true)
+                .catch((err) =>
+                  console.error("VibeCheck retry gate error:", err),
+                )
+                .finally(() => this.retryPending.delete(uriKey));
+            }
+          });
+      }
+
+      // BV-3/BV-5 fix: After this gate resolves, flush any files that were blocked
+      // while this gate was active. Skip files that have a pending toast retry
+      // (retryPending) to avoid the toast and flush racing on the same URI.
+      // Runs INSIDE the try block so globalGateOpen remains true throughout —
+      // any new AI changes detected during the flush are correctly queued as
+      // blocked rather than opening a second concurrent gate.
+      await this.flushBlockedQueue();
     } finally {
       this.globalGateOpen = false;
     }
-
-    if (approved) {
-      // BV-6 fix: Advance state to "idle" and update the safe-content baseline
-      // BEFORE calling reapplySavedChanges. The resulting onDidChangeTextDocument
-      // fires asynchronously after applyEdit resolves. If state were still
-      // "gating"/"blocked" when that event fires (old ordering), isReapplying
-      // might already be false and the AI-scale change would re-trigger the gate.
-      // By setting idle+baseline first, the event sees idle state with a matching
-      // content snapshot → delta is zero → no gate triggered.
-      this.setState(uriKey, "idle"); // clears maps, persists removal
-      const doc = vscode.workspace.textDocuments.find(
-        (d) => d.uri.toString() === uriKey,
-      );
-      // Seed the baseline with the post-approval content (will be the AI code
-      // after reapplySavedChanges completes, or checkpoint if non-retry).
-      // We refresh it again after reapply to get the exact final text.
-      if (doc) {
-        this.lastSafeContent.set(uriKey, doc.getText());
-      }
-
-      if (isRetry) {
-        // On retry the in-memory doc is at checkpoint — put Cursor's changes back.
-        await this.reapplySavedChanges(changedUri);
-        // Refresh baseline with the actual final content after re-apply.
-        const postDoc = vscode.workspace.textDocuments.find(
-          (d) => d.uri.toString() === uriKey,
-        );
-        if (postDoc) {
-          this.lastSafeContent.set(uriKey, postDoc.getText());
-        }
-      }
-    } else {
-      // Gate failed or cancelled — revert in-memory to checkpoint.
-      await this.restoreToCheckpoint(changedUri);
-      this.setState(uriKey, "blocked");
-      this.persistBlocked(); // BV-3: Persist blocked state after revert
-
-      vscode.window
-        .showWarningMessage(
-          "VibeCheck: Changes blocked — explain code to apply it.",
-          "Try Again",
-        )
-        .then((choice) => {
-          if (choice === "Try Again") {
-            // BV-2/BV-5 fix: Guard against concurrent runGate on the same URI.
-            // flushBlockedQueue also processes this file; one must win.
-            if (this.retryPending.has(uriKey)) return;
-            if (this.getState(uriKey) !== "blocked") return;
-
-            const savedSnippet = this.savedSnippets.get(uriKey) ?? snippet;
-            const checkpoint = this.checkpoints.get(uriKey);
-            const changes = this.savedChanges.get(uriKey);
-            const snip = this.savedSnippets.get(uriKey);
-            this.setState(uriKey, "idle"); // clears maps
-            if (checkpoint !== undefined) {
-              this.checkpoints.set(uriKey, checkpoint);
-              // Keep lastSafeContent in sync with the checkpoint so the next
-              // AI-change delta is computed against the correct baseline.
-              this.lastSafeContent.set(uriKey, checkpoint);
-            }
-            if (changes !== undefined) this.savedChanges.set(uriKey, changes);
-            if (snip !== undefined) this.savedSnippets.set(uriKey, snip);
-
-            this.retryPending.add(uriKey);
-            this.runGate(uriKey, changedUri, savedSnippet, true)
-              .catch((err) => console.error("VibeCheck retry gate error:", err))
-              .finally(() => this.retryPending.delete(uriKey));
-          }
-        });
-    }
-
-    // BV-3/BV-5 fix: After this gate resolves, flush any files that were blocked
-    // while this gate was active. Skip files that have a pending toast retry
-    // (retryPending) to avoid the toast and flush racing on the same URI.
-    await this.flushBlockedQueue();
   }
 
   // BV-3 fix: Drain the queue of files blocked while a gate was active.
@@ -334,10 +347,13 @@ export class AIChangeInterceptor {
     // ── Listener 1: detect AI changes ────────────────────────────────────────
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument(async (event) => {
-        if (this.isReapplying) return;
         if (event.contentChanges.length === 0) return;
 
         const uriKey = event.document.uri.toString();
+        // Per-URI suppression: only skip events for the specific file being
+        // restored/reapplied, not all files (the prior boolean would suppress
+        // events for uri-B while uri-A was mid-applyEdit).
+        if (this.reapplying.has(uriKey)) return;
         const state = this.getState(uriKey);
 
         if (state !== "idle") return;
@@ -528,7 +544,7 @@ export class AIChangeInterceptor {
     this.lastSafeContent.clear();
     this.retryPending.clear();
     this.globalGateOpen = false;
-    this.isReapplying = false; // BV-9 fix: was missing, could confuse new instance
+    this.reapplying.clear(); // BV-9 fix: clear so new instance starts with empty state
     this.writingCheckpoint.clear();
   }
 }

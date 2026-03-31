@@ -209,15 +209,19 @@ export class ExplanationGate {
 
       if (result.passed) {
         this.dispatch({ type: "JUDGE_PASS" });
-        this.panel.send({ type: "pass" });
+        this.panel.send({ type: "pass", score: result.score });
         this.telemetry.log({
           event: "gate_passed",
           totalAttempts: this.ctx.attemptCount,
         });
 
+        // HIGH fix: Reset ctx to IDLE immediately so that if a new GATE_TRIGGERED
+        // arrives within the 1200ms pass-display window, it dispatches on an IDLE
+        // context (valid) rather than the PASS context (throws InvalidTransition).
+        // The panel stays open for 1.2s for UX, but state is already clean.
+        this.ctx = makeInitialContext();
         setTimeout(() => {
           this.panel.dispose();
-          this.ctx = makeInitialContext();
         }, 1200);
 
         return true;

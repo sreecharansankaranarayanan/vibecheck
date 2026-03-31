@@ -9,9 +9,11 @@
     {{SCRIPT_URI}} is the VS Code webview URI for dist/webview.js.
   -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'nonce-{{NONCE}}'; style-src 'unsafe-inline';" />
+    content="default-src 'none'; script-src 'nonce-{{NONCE}}'; style-src 'nonce-{{NONCE}}';" />
   <title>VibeCheck</title>
-  <style>
+  <!-- SECURITY (CRIT-3): nonce on <style> matches the CSP style-src directive.
+       'unsafe-inline' is gone — only this specific block is allowed. -->
+  <style nonce="{{NONCE}}">
     :root {
       --bg: var(--vscode-editor-background, #1e1e1e);
       --fg: var(--vscode-editor-foreground, #d4d4d4);
