@@ -14,12 +14,20 @@ This repository is the artifact for:
 
 If you use VibeCheck or the course-scheduler task in your own research, please cite:
 
+**APA 7th edition**
+
+> Sankaranarayanan, S. (2026). Mitigating 'epistemic debt' in generative AI-scaffolded novice programming using metacognitive scripts. *Proceedings of the 13th ACM Conference on Learning at Scale (L@S '26)*. ACM. https://arxiv.org/abs/2602.20206
+
+**BibTeX**
+
 ```bibtex
 @inproceedings{sankaranarayanan2026epistemic,
-  title={Mitigating 'Epistemic Debt' in Generative AI-Scaffolded Novice Programming using Metacognitive Scripts},
+  title={Mitigating {'Epistemic Debt'} in Generative {AI}-Scaffolded Novice Programming using Metacognitive Scripts},
   author={Sankaranarayanan, Sreecharan},
   booktitle={Proceedings of the 13th ACM Conference on Learning at Scale},
+  series={L{\@}S '26},
   year={2026},
+  publisher={ACM},
   url={https://arxiv.org/abs/2602.20206}
 }
 ```
