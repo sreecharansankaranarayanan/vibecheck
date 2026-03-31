@@ -86,12 +86,17 @@ A 2-hour remote between-subjects experiment. Three conditions, N=26 per group.
 ### Group C: Scaffolded AI / Cursor + VibeCheck
 
 1. Participant opens `examples/course-scheduler-starter/` in **Cursor**
-2. VibeCheck extension is loaded via Extension Development Host:
+2. **CRITICAL — Set Cursor's AI model to Claude 3.5 Sonnet** (the code generator):
+   - Open Cursor Settings (`Cmd+,`) → Models → select **claude-3-5-sonnet** (or `claude-3-5-sonnet-20241022`)
+   - This is the generator model used in the paper. Replicating with a different model
+     changes the code style and complexity of AI suggestions, affecting gate firing rate
+     and explanation difficulty. This setting is separate from the VibeCheck judge model below.
+3. VibeCheck extension is loaded via Extension Development Host:
    - Facilitator clones this repo, runs `npm install && npm run compile`
    - Opens the `vibecheck/` folder in Cursor and presses F5 to launch the Extension Development Host
    - Participant works in the Extension Development Host window
-3. Set the Judge API key: `Cmd+Shift+P` -> `VibeCheck: Set Judge API Key` -> paste key
-4. Recommended settings (`Cmd+,` -> search `vibecheck`):
+4. Set the Judge API key: `Cmd+Shift+P` -> `VibeCheck: Set Judge API Key` -> paste key
+5. Recommended settings (`Cmd+,` -> search `vibecheck`):
    ```
    vibecheck.judgeProvider    = openai
    vibecheck.judgeModel       = gpt-4o
@@ -100,7 +105,9 @@ A 2-hour remote between-subjects experiment. Three conditions, N=26 per group.
    vibecheck.courseName       = React
    vibecheck.telemetryEnabled = true
    ```
-5. Verify the gate fires: open any file, use Cursor AI, click Apply; the modal should appear
+6. Verify the gate fires: open any file, use Cursor AI, click Apply; the modal should appear
+   - Note: the gate requires explanations of at least **50 characters**. Trivially short
+     responses ("it adds state") are rejected locally before reaching the judge.
 
 #### Telemetry file location (Group C)
 
