@@ -83,7 +83,6 @@ export function CourseCatalog() {
               gridTemplateColumns: "1fr auto auto auto",
               gap: 16,
               alignItems: "center",
-              flexWrap: "wrap",
             }}
           >
             <span style={{ fontWeight: 600, color: "#e2e8f0" }}>

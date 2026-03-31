@@ -250,8 +250,12 @@ export class AIChangeInterceptor {
             const changes = this.savedChanges.get(uriKey);
             const snip = this.savedSnippets.get(uriKey);
             this.setState(uriKey, "idle"); // clears maps
-            if (checkpoint !== undefined)
+            if (checkpoint !== undefined) {
               this.checkpoints.set(uriKey, checkpoint);
+              // Keep lastSafeContent in sync with the checkpoint so the next
+              // AI-change delta is computed against the correct baseline.
+              this.lastSafeContent.set(uriKey, checkpoint);
+            }
             if (changes !== undefined) this.savedChanges.set(uriKey, changes);
             if (snip !== undefined) this.savedSnippets.set(uriKey, snip);
 

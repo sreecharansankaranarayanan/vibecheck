@@ -15,6 +15,11 @@ let gate: ExplanationGate | undefined;
 // checkpointed files before destroying the interceptor.
 let extensionContext: vscode.ExtensionContext | undefined;
 
+// Tracks the single teardown subscription pushed to context.subscriptions so
+// it can be removed before pushing a new one on config-change rebuilds.
+// Without this, each rebuild accumulates another teardown entry in the array.
+let teardownSubscription: vscode.Disposable | undefined;
+
 export async function activate(
   context: vscode.ExtensionContext,
 ): Promise<void> {
@@ -156,7 +161,15 @@ async function setupGate(
     return gate!.challenge(event.codeSnippet);
   }, context.workspaceState);
 
-  context.subscriptions.push({ dispose: () => void safeTeardown() });
+  // Replace the prior teardown subscription (if any) to avoid accumulating
+  // duplicate entries in context.subscriptions on each config-change rebuild.
+  if (teardownSubscription) {
+    const idx = context.subscriptions.indexOf(teardownSubscription);
+    if (idx !== -1) context.subscriptions.splice(idx, 1);
+    teardownSubscription.dispose();
+  }
+  teardownSubscription = { dispose: () => void safeTeardown() };
+  context.subscriptions.push(teardownSubscription);
 
   vscode.window.setStatusBarMessage("$(shield) VibeCheck ON", 3000);
 }

@@ -32,7 +32,9 @@ function parseResponse(raw: string, passThreshold: number): JudgeResponse {
   const feedback = (parsed as Record<string, unknown>).feedback as string;
 
   if (!VALID_SCORES.has(score)) {
-    throw new Error(`Judge score out of range: ${score}`);
+    // Use "invalid_score" (not "range") so the retry allowlist in evaluate()
+    // does not accidentally retry deterministic bad-score responses.
+    throw new Error(`Judge returned invalid_score: ${score}`);
   }
 
   return {
@@ -83,12 +85,12 @@ export class JudgeService {
         }
         lastError = err instanceof Error ? err : new Error(String(err));
         if (attempt === 0) {
-          // Only retry on parse/empty-response failures, not network errors.
-          // "empty" catches transient null-content responses from the provider.
+          // Only retry on transient parse/empty-response failures.
+          // "invalid_score" is deterministic — the model returned a bad value
+          // and retrying won't help, so it is intentionally excluded.
           if (
-            !lastError.message.includes("JSON") &&
-            !lastError.message.includes("fields") &&
-            !lastError.message.includes("range") &&
+            !lastError.message.includes("non-JSON") &&
+            !lastError.message.includes("missing required fields") &&
             !lastError.message.includes("empty")
           ) {
             throw lastError;

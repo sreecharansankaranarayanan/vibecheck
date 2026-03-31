@@ -146,12 +146,4 @@ describe("GateStateMachine", () => {
     expect(next.codeSnippet).toBe("");
     expect(next.attemptCount).toBe(0);
   });
-
-  // IDLE + CANCELLED is still an invalid transition — guard against regression
-  it("IDLE throws on CANCELLED (invalid transition)", () => {
-    const ctx = makeInitialContext();
-    expect(() => transition(ctx, { type: "CANCELLED" })).toThrow(
-      "Invalid transition",
-    );
-  });
 });

@@ -80,10 +80,10 @@ describe("JudgeService", () => {
   it("throws on score out of range", async () => {
     const provider = mockProvider('{"score": 6, "feedback": "wat"}');
     const svc = new JudgeService(provider, 3);
-    await expect(svc.evaluate(makeRequest())).rejects.toThrow("out of range");
+    await expect(svc.evaluate(makeRequest())).rejects.toThrow("invalid_score");
   });
 
-  it("throws on empty response without retrying network errors", async () => {
+  it("does not retry on network errors (throws immediately)", async () => {
     const provider: LLMProvider = {
       complete: vi.fn().mockRejectedValue(new Error("Network error: timeout")),
     };
@@ -119,7 +119,7 @@ describe("JudgeService", () => {
   it("throws on score=0 (below valid range)", async () => {
     const provider = mockProvider('{"score": 0, "feedback": "Terrible."}');
     const svc = new JudgeService(provider, 3);
-    await expect(svc.evaluate(makeRequest())).rejects.toThrow("out of range");
+    await expect(svc.evaluate(makeRequest())).rejects.toThrow("invalid_score");
   });
 
   it("throws on score as string type (non-number)", async () => {
